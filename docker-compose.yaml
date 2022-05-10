@@ -1,0 +1,59 @@
+version: "3.3"
+
+services:
+  api:
+    depends_on:
+      - postgres
+      - nats
+    build: .
+    container_name: api
+    networks:
+      - aboba_network
+    hostname: api
+    ports:
+      - "8080:8080"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=storage
+      - POSTGRES_USER=go_user
+      - POSTGRES_PASSWORD=8246go
+    restart: on-failure
+
+  postgres:
+    image: postgres:14
+    container_name: postgres
+    networks:
+      - aboba_network
+    hostname: postgres
+    environment:
+      - POSTGRES_DB=storage
+      - POSTGRES_USER=go_user
+      - POSTGRES_PASSWORD=8246go
+    volumes:
+      - postgres_storage:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.domain/1_init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U go_user -domain storage"]
+      interval: 10s
+      timeout: 45s
+      retries: 3
+    restart: on-failure
+
+  nats:
+    image: nats-streaming:0.24.6
+    container_name: nats
+    networks:
+      - aboba_network
+    hostname: nats
+    environment:
+      - START_FROM_HERE_NEXT_TIME_______________________________
+    restart: on-failure
+
+
+volumes:
+  postgres_storage:
+
+networks:
+  aboba_network:
+    driver: bridge
