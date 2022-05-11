@@ -1,7 +1,9 @@
 package main
 
 import (
+	"L0/internal/handlers"
 	"L0/internal/repository"
+	"L0/internal/services"
 	"context"
 	"errors"
 	"log"
@@ -15,9 +17,11 @@ import (
 func main() {
 	connStr := os.Getenv("PG_CONNSTR")
 
-	repo, err := repository.New(connStr)
-	service := service.New(&repo)
-	router := handlers.New(&service)
+	repo := repository.New(connStr)
+	service := services.New(repo)
+	handler := handlers.New(service)
+	router := handler.Routes()
+	server := http.Server{Addr: ":8080", Handler: router}
 
 	//context and cancel function for server
 	srvCtx, srvCancelFunc := context.WithCancel(context.Background())
@@ -36,16 +40,16 @@ func main() {
 				log.Fatal("graceful shutdown timed out, forcing exit")
 			}
 		}()
-		err := router.Shutdown(shutdownCtx)
+		err := server.Shutdown(shutdownCtx)
 		if err != nil {
 			log.Fatal("error shutting down the server:", err)
 		}
 		srvCancelFunc()
 	}()
 
-	err := http.ListenAndServe("8080", router)
+	err := server.ListenAndServe()
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
-		log.Fatalf("Server stopped unexpectidly with error: %v", err)
+		log.Fatalf("Server failed unexpectidly with error: %v", err)
 	}
 
 	<-srvCtx.Done()

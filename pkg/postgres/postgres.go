@@ -14,6 +14,5 @@ func New(connString string) (*pgxpool.Pool, error) {
 
 	//and another configs should be defined here
 	connConf.MaxConns = int32(runtime.NumCPU())
-
 	return pgxpool.ConnectConfig(context.TODO(), connConf)
 }
