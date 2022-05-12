@@ -9,20 +9,21 @@ import (
 )
 
 type Repository struct {
-	*pgxpool.Pool
-	stan.Conn
+	PgPool   *pgxpool.Pool
+	NatsConn *stan.Conn
 }
 
-func New(connString string) *Repository {
-	pgPool, err := postgres.New(connString)
+func New() *Repository {
+	//Postgres connection
+	pgPool, err := postgres.New()
 	if err != nil {
 		log.Fatal("Unable to connect to database. Service won't start:", err)
 	}
-
+	//NATS connection
 	natsConn, err := nats.New()
 	if err != nil {
-		log.Fatal("Unable to connect to nats-streaming. Service won't start:", err)
+		log.Fatal(err)
 	}
 
-	return &Repository{pgPool, *natsConn}
+	return &Repository{pgPool, natsConn}
 }

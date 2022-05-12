@@ -35,7 +35,7 @@ services:
       - postgres_storage:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.domain/1_init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U go_user -domain storage"]
+      test: ["CMD-SHELL", "pg_isready -U go_user -d storage"]
       interval: 10s
       timeout: 45s
       retries: 3
@@ -47,6 +47,8 @@ services:
     networks:
       - aboba_network
     hostname: nats
+    ports:
+      - "4222:4222"
     environment:
       - START_FROM_HERE_NEXT_TIME_______________________________=bepis
     restart: on-failure

@@ -9,10 +9,15 @@ import (
 
 type Handler struct {
 	*services.Service
+	NatsSub *NatsSubscription
 }
 
 func New(service *services.Service) *Handler {
-	return &Handler{service}
+	sub, err := NewNatsSubscription(service.NatsConn)
+	if err != nil {
+		log.Fatalf("Can't establish subscription. Service won't start: %v", err)
+	}
+	return &Handler{service, sub}
 }
 
 func (h Handler) Routes() chi.Router {

@@ -1,15 +1,18 @@
 package nats_streaming
 
-import "github.com/nats-io/stan.go"
+import (
+	"github.com/nats-io/stan.go"
+)
 
 func New() (*stan.Conn, error) {
-	stanClusterId := "bepis"
-	clientId := "sepsis"
+	stanClusterId := "test-cluster"
+	clientId := "test-client"
+	url := stan.NatsURL("nats://nats:4222")
 
-	//todo realise where IDs should be assign from
-	conn, err := stan.Connect(stanClusterId, clientId)
+	conn, err := stan.Connect(stanClusterId, clientId, url)
 	if err != nil {
 		return nil, err
 	}
+
 	return &conn, nil
 }
