@@ -20,5 +20,5 @@ func NewNatsSubscription(conn *stan.Conn) (*NatsSubscription, error) {
 }
 
 func save(msg *stan.Msg) {
-	fmt.Println("suck", msg.Data)
+	fmt.Println("suck", string(msg.Data))
 }
