@@ -13,7 +13,7 @@ type Handler struct {
 }
 
 func New(service *services.Service) *Handler {
-	sub, err := NewNatsSubscription(service.NatsConn)
+	sub, err := NewNatsSubscription(service)
 	if err != nil {
 		log.Fatalf("Can't establish subscription. Service won't start: %v", err)
 	}
