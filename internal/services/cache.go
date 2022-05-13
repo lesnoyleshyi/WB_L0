@@ -16,3 +16,7 @@ func NewCacheService(repoCache *repository.Cache) *CacheService {
 func (cs CacheService) Save(order *domain.Order) {
 	cs.Cache.Save(order)
 }
+
+func (cs CacheService) Get(orderId string) (*domain.Order, bool) {
+	return cs.Cache.Get(orderId)
+}

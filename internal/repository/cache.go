@@ -24,6 +24,8 @@ func (c *Cache) Save(order *domain.Order) {
 }
 
 func (c *Cache) Get(id string) (*domain.Order, bool) {
+	c.mu.RLock()
 	order, ok := c.Storage[id]
+	c.mu.RUnlock()
 	return order, ok
 }
