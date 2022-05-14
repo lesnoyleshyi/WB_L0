@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+package templates
+
+const GetOrderById = `<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -22,7 +24,7 @@
 </form><br>
 <label>RESULT</label><br>
 <div class="myDiv">
-    <p>jopaцуауцау ауаукаукмукимуки  ewf</p>
+    <p>{{ .}}</p>
 </div>
 </body>
-</html>
+</html>`
