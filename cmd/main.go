@@ -15,6 +15,8 @@ import (
 	"time"
 )
 
+const restoreGap = 24
+
 func main() {
 	repo := repository.New()
 	defer func() { _ = (*repo.NatsConnRepo.NatsConn).Close() }()
@@ -23,6 +25,10 @@ func main() {
 	defer func() { _ = handler.NatsSub.Close() }()
 	router := handler.Routes()
 	server := http.Server{Addr: ":8080", Handler: router}
+	err := repo.RestoreCache(time.Now().Add(-1 * time.Hour * restoreGap))
+	if err != nil {
+		log.Fatalf("unable restore cache from database: %s", err)
+	}
 
 	go func() {
 		for {
@@ -40,7 +46,8 @@ func main() {
 		//blocking until signal caught
 		sig := <-c
 		log.Printf("%v signal caught, force quit in 30 second", sig)
-		shutdownCtx, _ := context.WithTimeout(srvCtx, time.Second*30)
+		shutdownCtx, cf := context.WithTimeout(srvCtx, time.Second*30)
+		defer cf()
 
 		go func() {
 			<-shutdownCtx.Done()
@@ -50,15 +57,16 @@ func main() {
 		}()
 		err := server.Shutdown(shutdownCtx)
 		if err != nil {
-			log.Fatal("error shutting down the server:", err)
+			log.Printf("error shutting down the server: %v", err)
 		}
 		srvCancelFunc()
 	}()
 
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("Server failed unexpectidly with error: %v", err)
 	}
 
 	<-srvCtx.Done()
+	log.Println("Server stopped safely")
 }

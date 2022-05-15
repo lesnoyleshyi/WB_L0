@@ -17,8 +17,8 @@ type NatsSubscription struct {
 //because idk how to connect methods of service layer
 //with nats.MsgHandler for Subscribe method of nats.Conn
 //the other way
-func NewNatsSubscription(service *services.Service) (*NatsSubscription, error) {
-	subscrSubj := "jopa"
+func NewNatsSubscription(s *services.Service) (*NatsSubscription, error) {
+	subj := "foo"
 
 	var saveFunc stan.MsgHandler = func(msg *stan.Msg) {
 		order, err := validateMsg(msg)
@@ -26,14 +26,22 @@ func NewNatsSubscription(service *services.Service) (*NatsSubscription, error) {
 			log.Println("unable to save message:", err)
 			return
 		}
-		if err := service.SQLService.Save(order.Id, msg.Data); err != nil {
+		if err := s.SQLService.Save(order.Id, msg.Data); err != nil {
 			log.Println("unable to save message:", err)
 			return
 		}
-		service.CacheService.Save(order)
+		s.CacheService.Save(order)
+		//manually acknowledge message only after saving it to db and cache
+		//to prevent loosing of messages
+		if err := msg.Ack(); err != nil {
+			//bad situation: message will be resending,
+			//but rejecting (by s.SQLService.Save()) as it'll be saved in db
+			log.Printf("message with id %s", order.Id)
+		}
 	}
 
-	sub, err := (*service.NatsService.NatsConn).Subscribe(subscrSubj, saveFunc)
+	sub, err := (*s.NatsService.NatsConn).Subscribe(
+		subj, saveFunc, stan.DurableName("go_client"), stan.SetManualAckMode())
 	if err != nil {
 		return nil, fmt.Errorf("can't establish subscription. Service won't start: %w", err)
 	}

@@ -1,6 +1,11 @@
 package domain
 
-import "time"
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"time"
+)
 
 type Order struct {
 	Id              string    `json:"order_uid"`
@@ -54,4 +59,15 @@ type Item struct {
 	NmId        int    `json:"nm_id"`
 	Brand       string `json:"brand"`
 	Status      int    `json:"status"`
+}
+
+func (o *Order) Scan(dest interface{}) error {
+	byteOrder, ok := dest.([]byte)
+	if !ok {
+		return errors.New("data not of dest type")
+	}
+	if err := json.Unmarshal(byteOrder, o); err != nil {
+		return fmt.Errorf("can't unmarshal data to struct Order: %w", err)
+	}
+	return nil
 }

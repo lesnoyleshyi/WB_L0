@@ -113,7 +113,7 @@ func main() {
 	for i := 0; i < msgCount; i++ {
 		time.Sleep(time.Millisecond * time.Duration(sleepMs))
 		data := generateJson()
-		if err := conn.Publish("jopa", []byte(data)); err != nil {
+		if err := conn.Publish("foo", []byte(data)); err != nil {
 			log.Println("Something goes wrong:", err)
 		}
 	}
@@ -171,7 +171,7 @@ func generateJson() string {
 
 func randString(length int, vocabulary []rune) string {
 	id := make([]rune, length)
-	rand.Seed(time.Now().Unix())
+	rand.Seed(time.Now().UnixMilli() / 10)
 	for i := 0; i < length; i++ {
 		id[i] = vocabulary[rand.Intn(len(vocabulary))]
 	}
