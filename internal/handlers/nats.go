@@ -26,7 +26,10 @@ func NewNatsSubscription(service *services.Service) (*NatsSubscription, error) {
 			log.Println("unable to save message:", err)
 			return
 		}
-		//service.SQLService.Save(&order)
+		if err := service.SQLService.Save(order.Id, msg.Data); err != nil {
+			log.Println("unable to save message:", err)
+			return
+		}
 		service.CacheService.Save(order)
 	}
 
@@ -39,13 +42,11 @@ func NewNatsSubscription(service *services.Service) (*NatsSubscription, error) {
 
 func validateMsg(msg *stan.Msg) (*domain.Order, error) {
 	order := domain.Order{}
-	fmt.Printf("look\n%s\n", string(msg.Data))
 	if err := json.Unmarshal(msg.Data, &order); err != nil {
-		return nil, fmt.Errorf("can't unmarshal message: %w", err)
+		return nil, fmt.Errorf("invalid message: %w", err)
 	}
-	fmt.Println(order)
 	if order.Id == "" {
-		return nil, fmt.Errorf("empty id in message")
+		return nil, fmt.Errorf("invalid message: empty id")
 	}
 	return &order, nil
 }

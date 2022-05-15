@@ -171,7 +171,7 @@ func generateJson() string {
 
 func randString(length int, vocabulary []rune) string {
 	id := make([]rune, length)
-	rand.Seed(time.Now().UnixNano())
+	rand.Seed(time.Now().Unix())
 	for i := 0; i < length; i++ {
 		id[i] = vocabulary[rand.Intn(len(vocabulary))]
 	}
