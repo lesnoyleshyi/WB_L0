@@ -9,17 +9,15 @@ import (
 )
 
 type Repository struct {
-	PgPoolRepo   *SQLRepository
-	NatsConnRepo *NatsRepository
-	CacheRepo    *Cache
+	PgPoolRepo *SQLRepository
+	CacheRepo  *Cache
 }
 
 func New() *Repository {
 	pgPool := NewSQLRepo()
-	NatsConn := NewNatsRepo()
 	Cache := NewCacheRepo()
 
-	return &Repository{pgPool, NatsConn, Cache}
+	return &Repository{pgPool, Cache}
 }
 
 const pgTimeLayout = time.RFC3339

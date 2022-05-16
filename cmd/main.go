@@ -19,10 +19,10 @@ const restoreGap = 24
 
 func main() {
 	repo := repository.New()
-	defer func() { _ = (*repo.NatsConnRepo.NatsConn).Close() }()
 	service := services.New(repo)
 	handler := handlers.New(service)
-	defer func() { _ = handler.NatsSub.Close() }()
+	defer func() { _ = (*handler.Nats.Subscription).Unsubscribe() }()
+	defer func() { _ = (*handler.Nats.Conn).Close() }()
 	router := handler.Routes()
 	server := http.Server{Addr: ":8080", Handler: router}
 	err := repo.RestoreCache(time.Now().Add(-1 * time.Hour * restoreGap))
@@ -30,18 +30,15 @@ func main() {
 		log.Fatalf("unable restore cache from database: %s", err)
 	}
 
-	go func() {
-		for {
-			time.Sleep(time.Second * 10)
-			fmt.Println(repo.CacheRepo.Storage)
-		}
-	}()
+	//debug function
+	go printCache(repo)
 
 	//context and cancel function for server
 	srvCtx, srvCancelFunc := context.WithCancel(context.Background())
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGTERM)
 
+	//non-graceful graceful shutdown
 	go func() {
 		//blocking until signal caught
 		sig := <-c
@@ -69,4 +66,11 @@ func main() {
 
 	<-srvCtx.Done()
 	log.Println("Server stopped safely")
+}
+
+func printCache(repo *repository.Repository) {
+	for {
+		time.Sleep(time.Second * 10)
+		fmt.Println(repo.CacheRepo.Storage)
+	}
 }

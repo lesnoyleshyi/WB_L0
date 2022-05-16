@@ -8,17 +8,15 @@ import (
 
 type Handler struct {
 	*services.Service
-	NatsSub *NatsSubscription
+	Nats *NatsHandler
 }
 
-const createTemplatePath = "/api/internal/handlers/templates/getById.html"
-
 func New(service *services.Service) *Handler {
-	sub, err := NewNatsSubscription(service)
+	natsHandler, err := NewNatsHandler(service)
 	if err != nil {
-		log.Fatalf("Can't establish subscription. Service won't start: %v", err)
+		log.Fatalf("NATS error: %v. Service won't start", err)
 	}
-	return &Handler{service, sub}
+	return &Handler{service, natsHandler}
 }
 
 func (h Handler) Routes() chi.Router {

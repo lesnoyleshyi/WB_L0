@@ -3,23 +3,20 @@ package handlers
 import (
 	"L0/internal/domain"
 	"L0/internal/services"
+	nats "L0/pkg/nats-streaming"
 	"encoding/json"
 	"fmt"
 	"github.com/nats-io/stan.go"
 	"log"
 )
 
-type NatsSubscription struct {
-	stan.Subscription
+type NatsHandler struct {
+	Conn         *stan.Conn
+	Subscription *stan.Subscription
 }
 
-//NewNatsSubscription receives pointer to services.Service
-//because idk how to connect methods of service layer
-//with nats.MsgHandler for Subscribe method of nats.Conn
-//the other way
-func NewNatsSubscription(s *services.Service) (*NatsSubscription, error) {
+func NewNatsHandler(s *services.Service) (*NatsHandler, error) {
 	subj := "foo"
-
 	var saveFunc stan.MsgHandler = func(msg *stan.Msg) {
 		order, err := validateMsg(msg)
 		if err != nil {
@@ -40,12 +37,18 @@ func NewNatsSubscription(s *services.Service) (*NatsSubscription, error) {
 		}
 	}
 
-	sub, err := (*s.NatsService.NatsConn).Subscribe(
+	natsConn, err := nats.New()
+	if err != nil {
+		return nil, fmt.Errorf("error connecting NATS: %w", err)
+	}
+
+	sub, err := (*natsConn).Subscribe(
 		subj, saveFunc, stan.DurableName("go_client"), stan.SetManualAckMode())
 	if err != nil {
-		return nil, fmt.Errorf("can't establish subscription. Service won't start: %w", err)
+		return nil, fmt.Errorf("can't establish NATS subscription: %w", err)
 	}
-	return &NatsSubscription{Subscription: sub}, nil
+
+	return &NatsHandler{Conn: natsConn, Subscription: &sub}, nil
 }
 
 func validateMsg(msg *stan.Msg) (*domain.Order, error) {
