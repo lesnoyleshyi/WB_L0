@@ -5,3 +5,4 @@ CREATE TABLE IF NOT EXISTS orders (
 );
 
 CREATE UNIQUE INDEX orders_orderId_idxjin ON orders ((data -> 'order_uid'));
+-- CREATE INDEX orders_date_created_idx ON orders USING GIN ((data -> 'date_created'));
